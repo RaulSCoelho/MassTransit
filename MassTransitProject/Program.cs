@@ -1,5 +1,6 @@
 using MassTransit;
 using Contracts;
+using Components.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,7 @@ services.AddMassTransit(cfg =>
 {
     cfg.UsingRabbitMq();
 
-    cfg.AddRequestClient<SubmitOrder>();
+    cfg.AddRequestClient<SubmitOrder>(new Uri($"exchange:{KebabCaseEndpointNameFormatter.Instance.Consumer<SubmitOrderConsumer>()}"));
 });
 
 services.AddOptions<MassTransitHostOptions>().Configure(options =>
