@@ -1,6 +1,7 @@
 ﻿using Contracts;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
 namespace Components.Consumers
@@ -14,12 +15,11 @@ namespace Components.Consumers
             _logger = logger;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "MCA0001:Anonymous type does not map to message contract", Justification = "<Pendente>")]
         public async Task Consume(ConsumeContext<SubmitOrder> context)
         {
             if (context.RequestId != null)
             {
-#pragma warning disable MCA0001 // Anonymous type does not map to message contract
-
                 if (context.Message.CustomerNumber.Contains("TEST"))
                 {
                     await context.RespondAsync<OrderSubmissionsRejected>(new
@@ -37,8 +37,14 @@ namespace Components.Consumers
                     context.Message.OrderId,
                     context.Message.CustomerNumber
                 });
-#pragma warning restore MCA0001 // Anonymous type does not map to message contract
             }
+
+            await context.Publish<OrderSubmitted>(new
+            {
+                OrderId = context.Message.OrderId,
+                InVar.Timestamp,
+                CustomerNumber = context.Message.CustomerNumber
+            });
         }
     }
 }

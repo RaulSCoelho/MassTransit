@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using MassTransit;
 using Components.Consumers;
+using Components.StateMachines;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
@@ -9,6 +10,9 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddMassTransit(cfg =>
         {
             cfg.AddConsumer<SubmitOrderConsumer>();
+
+            cfg.AddSagaStateMachine<OrderStateMachine, OrderState>()
+            .RedisRepository();
 
             cfg.UsingRabbitMq(ConfigureBus);
         });
