@@ -15,6 +15,8 @@ services.AddMassTransit(cfg =>
     cfg.UsingRabbitMq();
 
     cfg.AddRequestClient<SubmitOrder>(new Uri($"exchange:{KebabCaseEndpointNameFormatter.Instance.Consumer<SubmitOrderConsumer>()}"));
+
+    cfg.AddRequestClient<CheckOrder>();
 });
 
 services.AddOptions<MassTransitHostOptions>().Configure(options =>

@@ -12,6 +12,17 @@ namespace Components.StateMachines
         public OrderStateMachine()
         {
             Event(() => OrderSubmitted, x => x.CorrelateById(m => m.Message.OrderId));
+            Event(() => OrderStatusRequested, x =>
+            {
+                x.CorrelateById(m => m.Message.OrderId);
+                x.OnMissingInstance(m => m.ExecuteAsync(async context =>
+                {
+                    if (context.RequestId.HasValue)
+                    {
+                        await context.RespondAsync<OrderNotFound>(new { context.Message.OrderId });
+                    }
+                }));
+            });
 
             InstanceState(x => x.CurrentState);
 
@@ -30,6 +41,15 @@ namespace Components.StateMachines
                 Ignore(OrderSubmitted));
 
             DuringAny(
+                When(OrderStatusRequested)
+                    .RespondAsync(x => x.Init<OrderStatus>(new
+                    {
+                        OrderId = x.Instance.CorrelationId,
+                        State = x.Instance.CurrentState
+                    }))
+                );
+
+            DuringAny(
                 When(OrderSubmitted)
                     .Then(context =>
                     {
@@ -42,6 +62,7 @@ namespace Components.StateMachines
         public State Submitted { get; private set; }
 
         public Event<OrderSubmitted> OrderSubmitted { get; private set; }
+        public Event<CheckOrder> OrderStatusRequested { get; private set; }
     }
 
     public class OrderState : SagaStateMachineInstance, ISagaVersion

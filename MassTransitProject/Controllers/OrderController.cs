@@ -11,12 +11,33 @@ namespace MassTransitProject.Controllers
         readonly ILogger<OrderController> _logger;
         readonly IRequestClient<SubmitOrder> _submitOrderRequestClient;
         private readonly ISendEndpointProvider _sendEndpointProvider;
+        private readonly IRequestClient<CheckOrder> _checkOrderRequestClient;
 
-        public OrderController(ILogger<OrderController> logger, IRequestClient<SubmitOrder> submitOrderRequestClient, ISendEndpointProvider sendEndpointProvider)
+        public OrderController(ILogger<OrderController> logger, IRequestClient<SubmitOrder> submitOrderRequestClient, ISendEndpointProvider sendEndpointProvider, IRequestClient<CheckOrder> checkOrderRequestClient)
         {
             _logger = logger;
             _submitOrderRequestClient = submitOrderRequestClient;
             _sendEndpointProvider = sendEndpointProvider;
+            _checkOrderRequestClient = checkOrderRequestClient;
+        }
+
+        // GET api/<OrderController>
+        [HttpGet]
+        public async Task<IActionResult> Get(Guid id)
+        {
+            var (status, notFound) = await _checkOrderRequestClient.GetResponse<OrderStatus, OrderNotFound>(new { OrderId = id });
+
+            if (status.IsCompletedSuccessfully)
+            {
+                var response = await status;
+                return Ok(response.Message);
+            }
+            else
+            {
+                var response = await notFound;
+                return NotFound(response.Message);
+            }
+
         }
 
         // POST api/<OrderController>
