@@ -11,7 +11,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         {
             cfg.AddConsumer<SubmitOrderConsumer>();
 
-            cfg.AddSagaStateMachine<OrderStateMachine, OrderState>()
+            cfg.AddSagaStateMachine<OrderStateMachine, OrderState>(typeof(OrderStateMachineDefinition))
             .RedisRepository();
 
             cfg.UsingRabbitMq(ConfigureBus);
